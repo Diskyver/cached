@@ -32,8 +32,8 @@ pub fn main() {
 
         println!(" ** Cache info **");
         let cache = SLOW_FN.lock().unwrap();
-        println!("hits=1 -> {:?}", cache.cache_hits().unwrap() == 1);
-        println!("misses=11 -> {:?}", cache.cache_misses().unwrap() == 11);
+        println!("hits=1 -> {:?}", cache.hits().unwrap() == 1);
+        println!("misses=11 -> {:?}", cache.misses().unwrap() == 11);
         // make sure the cache-lock is dropped
     }
 }

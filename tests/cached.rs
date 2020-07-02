@@ -21,7 +21,7 @@ fn test_unbound_cache() {
     fib0(20);
     {
         let cache = UNBOUND_FIB.lock().unwrap();
-        assert_eq!(21, cache.cache_size());
+        assert_eq!(21, cache.size());
     }
 }
 
@@ -38,7 +38,7 @@ fn test_sized_cache() {
     fib1(20);
     {
         let cache = SIZED_FIB.lock().unwrap();
-        assert_eq!(3, cache.cache_size());
+        assert_eq!(3, cache.size());
     }
 }
 
@@ -56,15 +56,15 @@ fn test_timed_cache() {
     timed(1);
     {
         let cache = TIMED.lock().unwrap();
-        assert_eq!(1, cache.cache_misses().unwrap());
-        assert_eq!(1, cache.cache_hits().unwrap());
+        assert_eq!(1, cache.misses().unwrap());
+        assert_eq!(1, cache.hits().unwrap());
     }
     sleep(Duration::new(3, 0));
     timed(1);
     {
         let cache = TIMED.lock().unwrap();
-        assert_eq!(2, cache.cache_misses().unwrap());
-        assert_eq!(1, cache.cache_hits().unwrap());
+        assert_eq!(2, cache.misses().unwrap());
+        assert_eq!(1, cache.hits().unwrap());
     }
 }
 
@@ -80,7 +80,7 @@ fn test_string_cache() {
     string_1("a".into(), "b".into());
     {
         let cache = STRING_CACHE_EXPLICIT.lock().unwrap();
-        assert_eq!(1, cache.cache_size());
+        assert_eq!(1, cache.size());
     }
 }
 
@@ -94,20 +94,20 @@ cached_key! {
 }
 
 #[test]
-fn test_timed_cache_key() {
+fn test_timed_key() {
     timed_2(1);
     timed_2(1);
     {
         let cache = TIMED_CACHE.lock().unwrap();
-        assert_eq!(1, cache.cache_misses().unwrap());
-        assert_eq!(1, cache.cache_hits().unwrap());
+        assert_eq!(1, cache.misses().unwrap());
+        assert_eq!(1, cache.hits().unwrap());
     }
     sleep(Duration::new(3, 0));
     timed_2(1);
     {
         let cache = TIMED_CACHE.lock().unwrap();
-        assert_eq!(2, cache.cache_misses().unwrap());
-        assert_eq!(1, cache.cache_hits().unwrap());
+        assert_eq!(2, cache.misses().unwrap());
+        assert_eq!(1, cache.hits().unwrap());
     }
 }
 
@@ -122,34 +122,34 @@ cached_key! {
 }
 
 #[test]
-fn test_sized_cache_key() {
+fn test_sized_key() {
     sized_key("a", "1");
     sized_key("a", "1");
     {
         let cache = SIZED_CACHE.lock().unwrap();
-        assert_eq!(1, cache.cache_misses().unwrap());
-        assert_eq!(1, cache.cache_hits().unwrap());
-        assert_eq!(1, cache.cache_size());
+        assert_eq!(1, cache.misses().unwrap());
+        assert_eq!(1, cache.hits().unwrap());
+        assert_eq!(1, cache.size());
     }
     sized_key("a", "1");
     {
         let cache = SIZED_CACHE.lock().unwrap();
-        assert_eq!(1, cache.cache_misses().unwrap());
-        assert_eq!(2, cache.cache_hits().unwrap());
-        assert_eq!(1, cache.cache_size());
+        assert_eq!(1, cache.misses().unwrap());
+        assert_eq!(2, cache.hits().unwrap());
+        assert_eq!(1, cache.size());
     }
     sized_key("a", "2");
     {
         let cache = SIZED_CACHE.lock().unwrap();
-        assert_eq!(2, cache.cache_hits().unwrap());
-        assert_eq!(2, cache.cache_size());
+        assert_eq!(2, cache.hits().unwrap());
+        assert_eq!(2, cache.size());
         assert_eq!(vec!["a2", "a1"], cache.key_order().collect::<Vec<_>>());
         assert_eq!(vec![&2, &2], cache.value_order().collect::<Vec<_>>());
     }
     sized_key("a", "3");
     {
         let cache = SIZED_CACHE.lock().unwrap();
-        assert_eq!(2, cache.cache_size());
+        assert_eq!(2, cache.size());
         assert_eq!(vec!["a3", "a2"], cache.key_order().collect::<Vec<_>>());
         assert_eq!(vec![&2, &2], cache.value_order().collect::<Vec<_>>());
     }
@@ -157,7 +157,7 @@ fn test_sized_cache_key() {
     sized_key("a", "5");
     {
         let cache = SIZED_CACHE.lock().unwrap();
-        assert_eq!(2, cache.cache_size());
+        assert_eq!(2, cache.size());
         assert_eq!(vec!["a5", "a4"], cache.key_order().collect::<Vec<_>>());
         assert_eq!(vec![&2, &2], cache.value_order().collect::<Vec<_>>());
     }
@@ -165,7 +165,7 @@ fn test_sized_cache_key() {
     sized_key("a", "8");
     {
         let cache = SIZED_CACHE.lock().unwrap();
-        assert_eq!(2, cache.cache_size());
+        assert_eq!(2, cache.size());
         assert_eq!(vec!["a8", "a67"], cache.key_order().collect::<Vec<_>>());
         assert_eq!(vec![&2, &3], cache.value_order().collect::<Vec<_>>());
     }
@@ -180,7 +180,7 @@ cached_key_result! {
 }
 
 #[test]
-fn cache_result_key() {
+fn result_key() {
     assert!(test_result_key(2).is_ok());
     assert!(test_result_key(4).is_ok());
     assert!(test_result_key(6).is_err());
@@ -189,9 +189,9 @@ fn cache_result_key() {
     assert!(test_result_key(4).is_ok());
     {
         let cache = RESULT_CACHE_KEY.lock().unwrap();
-        assert_eq!(2, cache.cache_size());
-        assert_eq!(2, cache.cache_hits().unwrap());
-        assert_eq!(4, cache.cache_misses().unwrap());
+        assert_eq!(2, cache.size());
+        assert_eq!(2, cache.hits().unwrap());
+        assert_eq!(4, cache.misses().unwrap());
     }
 }
 
@@ -203,7 +203,7 @@ cached_result! {
 }
 
 #[test]
-fn cache_result_no_default() {
+fn result_no_default() {
     assert!(test_result_no_default(2).is_ok());
     assert!(test_result_no_default(4).is_ok());
     assert!(test_result_no_default(6).is_err());
@@ -212,23 +212,23 @@ fn cache_result_no_default() {
     assert!(test_result_no_default(4).is_ok());
     {
         let cache = RESULT_CACHE.lock().unwrap();
-        assert_eq!(2, cache.cache_size());
-        assert_eq!(2, cache.cache_hits().unwrap());
-        assert_eq!(4, cache.cache_misses().unwrap());
+        assert_eq!(2, cache.size());
+        assert_eq!(2, cache.hits().unwrap());
+        assert_eq!(4, cache.misses().unwrap());
     }
 }
 
 cached_control! {
     CONTROL_CACHE: UnboundCache<String, String> = UnboundCache::new();
     Key = { input.to_owned() };
-    PostGet(cached_val) = { return Ok(cached_val.clone()) };
+    PostGet(cached_val) = return Ok(cached_val.clone());
     PostExec(body_result) = {
         match body_result {
             Ok(v) => v,
             Err(e) => return Err(e),
         }
     };
-    Set(set_value) = { set_value.clone() };
+    Set(set_value) = set_value.clone();
     Return(return_value) = {
         println!("{}", return_value);
         Ok(return_value)
@@ -246,12 +246,12 @@ fn test_can_fail() {
     assert_eq!(can_fail("abc"), Err("too big".to_string()));
     {
         let cache = CONTROL_CACHE.lock().unwrap();
-        assert_eq!(2, cache.cache_misses().unwrap());
+        assert_eq!(2, cache.misses().unwrap());
     }
     assert_eq!(can_fail("ab"), Ok("ab-2".to_string()));
     {
         let cache = CONTROL_CACHE.lock().unwrap();
-        assert_eq!(1, cache.cache_hits().unwrap());
+        assert_eq!(1, cache.hits().unwrap());
     }
 }
 
@@ -267,7 +267,7 @@ cached_key! {
 #[test]
 /// This is a regression test to confirm that racing cache sets on a SizedCache
 /// do not cause duplicates to exist in the internal `order`. See issue #7
-fn test_racing_duplicate_keys_do_not_duplicate_sized_cache_ordering() {
+fn test_racing_duplicate_keys_do_not_duplicate_sized_ordering() {
     let a = thread::spawn(|| slow_small_cache("a", "b"));
     sleep(Duration::new(0, 500000));
     let b = thread::spawn(|| slow_small_cache("a", "b"));

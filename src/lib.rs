@@ -314,43 +314,49 @@ pub use async_std;
 /// Cache operations
 pub trait Cached<K, V> {
     /// Attempt to retrieve a cached value
-    fn cache_get(&mut self, k: &K) -> Option<&V>;
+    fn get(&mut self, k: &K) -> Option<&V>;
 
     /// Attempt to retrieve a cached value with mutable access
-    fn cache_get_mut(&mut self, k: &K) -> Option<&mut V>;
+    fn get_mut(&mut self, k: &K) -> Option<&mut V>;
 
-    /// Insert a key, value pair
-    fn cache_set(&mut self, k: K, v: V);
+    /// Insert a key, value pair, return the old value if any and a reference to the new value
+    fn insert(&mut self, k: K, v: V) -> (Option<V>, &V);
+
+    /// Insert a key, value pair, return the old value if any and a mutable reference to the new value
+    fn insert_mut(&mut self, k: K, v: V) -> (Option<V>, &mut V);
 
     /// Remove a cached value
-    fn cache_remove(&mut self, k: &K) -> Option<V>;
+    fn remove(&mut self, k: &K) -> Option<V>;
+
+    /// Remove a cached value
+    fn remove_entry(&mut self, k: &K) -> Option<(K, V)>;
 
     /// Remove all cached values. Keeps the allocated memory for reuse.
-    fn cache_clear(&mut self);
+    fn clear(&mut self);
 
     /// Remove all cached values. Free memory and return to initial state
-    fn cache_reset(&mut self);
+    fn reset(&mut self);
 
     /// Return the current cache size (number of elements)
-    fn cache_size(&self) -> usize;
+    fn size(&self) -> usize;
 
     /// Return the number of times a cached value was successfully retrieved
-    fn cache_hits(&self) -> Option<u64> {
+    fn hits(&self) -> Option<u64> {
         None
     }
 
     /// Return the number of times a cached value was unable to be retrieved
-    fn cache_misses(&self) -> Option<u64> {
+    fn misses(&self) -> Option<u64> {
         None
     }
 
     /// Return the cache capacity
-    fn cache_capacity(&self) -> Option<usize> {
+    fn capacity(&self) -> Option<usize> {
         None
     }
 
     /// Return the lifespan of cached values (time to eviction)
-    fn cache_lifespan(&self) -> Option<u64> {
+    fn lifespan(&self) -> Option<u64> {
         None
     }
 }

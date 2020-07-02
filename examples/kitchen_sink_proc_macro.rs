@@ -77,25 +77,38 @@ impl<K: Hash + Eq, V> MyCache<K, V> {
     }
 }
 impl<K: Hash + Eq, V> Cached<K, V> for MyCache<K, V> {
-    fn cache_get(&mut self, k: &K) -> Option<&V> {
+    fn get(&mut self, k: &K) -> Option<&V> {
         self.store.get(k)
     }
-    fn cache_get_mut(&mut self, k: &K) -> Option<&mut V> {
+    fn get_mut(&mut self, k: &K) -> Option<&mut V> {
         self.store.get_mut(k)
     }
-    fn cache_set(&mut self, k: K, v: V) {
-        self.store.insert(k, v);
+    fn insert(&mut self, k: K, v: V) -> (Option<V>, &V) {
+        let (old, new) = self.insert_mut(k, v);
+        (old, new)
     }
-    fn cache_remove(&mut self, k: &K) -> Option<V> {
+    fn insert_mut(&mut self, k: K, v: V) -> (Option<V>, &mut V) {
+        match self.store.entry(k) {
+            std::collections::hash_map::Entry::Occupied(mut occupied) => {
+                let old = occupied.insert(v);
+                (Some(old), occupied.into_mut())
+            }
+            std::collections::hash_map::Entry::Vacant(vacant) => (None, vacant.insert(v)),
+        }
+    }
+    fn remove(&mut self, k: &K) -> Option<V> {
         self.store.remove(k)
     }
-    fn cache_clear(&mut self) {
+    fn remove_entry(&mut self, k: &K) -> Option<(K, V)> {
+        self.store.remove_entry(k)
+    }
+    fn clear(&mut self) {
         self.store.clear();
     }
-    fn cache_reset(&mut self) {
+    fn reset(&mut self) {
         self.store = HashMap::with_capacity(self.capacity);
     }
-    fn cache_size(&self) -> usize {
+    fn size(&self) -> usize {
         self.store.len()
     }
 }
@@ -115,8 +128,8 @@ pub fn main() {
     fib(3);
     {
         let cache = FIB.lock().unwrap();
-        println!("hits: {:?}", cache.cache_hits());
-        println!("misses: {:?}", cache.cache_misses());
+        println!("hits: {:?}", cache.hits());
+        println!("misses: {:?}", cache.misses());
         // make sure lock is dropped
     }
     fib(10);
@@ -127,8 +140,8 @@ pub fn main() {
     fib_2(3);
     {
         let cache = FLIB.lock().unwrap();
-        println!("hits: {:?}", cache.cache_hits());
-        println!("misses: {:?}", cache.cache_misses());
+        println!("hits: {:?}", cache.hits());
+        println!("misses: {:?}", cache.misses());
         // make sure lock is dropped
     }
 
@@ -137,8 +150,8 @@ pub fn main() {
     fib_specific(20);
     {
         let cache = FIB_SPECIFIC.lock().unwrap();
-        println!("hits: {:?}", cache.cache_hits());
-        println!("misses: {:?}", cache.cache_misses());
+        println!("hits: {:?}", cache.hits());
+        println!("misses: {:?}", cache.misses());
         // make sure lock is dropped
     }
     fib_specific(20);
@@ -148,8 +161,8 @@ pub fn main() {
     custom(25);
     {
         let cache = CUSTOM.lock().unwrap();
-        println!("hits: {:?}", cache.cache_hits());
-        println!("misses: {:?}", cache.cache_misses());
+        println!("hits: {:?}", cache.hits());
+        println!("misses: {:?}", cache.misses());
         // make sure lock is dropped
     }
 
@@ -160,8 +173,8 @@ pub fn main() {
     slow(10, 10);
     {
         let cache = SLOW.lock().unwrap();
-        println!("hits: {:?}", cache.cache_hits());
-        println!("misses: {:?}", cache.cache_misses());
+        println!("hits: {:?}", cache.hits());
+        println!("misses: {:?}", cache.misses());
         // make sure the cache-lock is dropped
     }
 }
